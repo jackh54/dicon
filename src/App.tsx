@@ -22,6 +22,11 @@ function roundRectPath(ctx: CanvasRenderingContext2D, x: number, y: number, w: n
   ctx.closePath();
 }
 
+function drawRoundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, radius: number) {
+  roundRectPath(ctx, x, y, w, h, radius);
+  ctx.fill();
+}
+
 export default function App() {
   const [activeTool, setActiveTool] = useState<ToolKey>('notif');
 
@@ -73,8 +78,11 @@ function DiscordNotifTool() {
   const [mask, setMask] = useState<IconMask>('none');
 
   const previewStyle = useMemo(() => {
-    const diameter = Math.max(34, Math.round(size * (badgeScale / 100)));
-    const fontSize = Math.max(16, Math.round(diameter * 0.52));
+    const text = (badgeValue || '1').slice(0, 3);
+    const height = Math.max(34, Math.round(size * (badgeScale / 100)));
+    const fontSize = Math.max(14, Math.round(height * 0.46));
+    const extra = text.length > 1 ? Math.round(height * 0.22 * (text.length - 1)) : 0;
+    const width = height + extra;
     const iconRadius = mask === 'discord-app' ? `${Math.round(size * 0.22)}px` : '0px';
 
     return {
@@ -82,8 +90,9 @@ function DiscordNotifTool() {
       height: size,
       borderRadius: iconRadius,
       badge: {
-        width: diameter,
-        height: diameter,
+        width,
+        height,
+        borderRadius: `${Math.round(height / 2)}px`,
         fontSize,
         bottom: offset,
         right: offset,
@@ -91,7 +100,7 @@ function DiscordNotifTool() {
         borderColor: badgeRingColor
       }
     };
-  }, [badgeColor, badgeRingColor, badgeScale, mask, offset, size]);
+  }, [badgeColor, badgeRingColor, badgeScale, badgeValue, mask, offset, size]);
 
   function applyDiscordDefaults() {
     setBadgeColor('#f23f43');
@@ -134,26 +143,25 @@ function DiscordNotifTool() {
       ctx.drawImage(img, 0, 0, size, size);
     }
 
-    const diameter = Math.max(34, Math.round(size * (badgeScale / 100)));
+    const text = (badgeValue || '1').slice(0, 3);
+    const badgeHeight = Math.max(34, Math.round(size * (badgeScale / 100)));
+    const extra = text.length > 1 ? Math.round(badgeHeight * 0.22 * (text.length - 1)) : 0;
+    const badgeWidth = badgeHeight + extra;
     const ring = Math.max(4, Math.round(size * 0.02));
-    const badgeCenterX = size - offset - diameter / 2;
-    const badgeCenterY = size - offset - diameter / 2;
+    const badgeX = size - offset - badgeWidth;
+    const badgeY = size - offset - badgeHeight;
 
     ctx.fillStyle = badgeRingColor;
-    ctx.beginPath();
-    ctx.arc(badgeCenterX, badgeCenterY, diameter / 2 + ring, 0, Math.PI * 2);
-    ctx.fill();
+    drawRoundRect(ctx, badgeX - ring, badgeY - ring, badgeWidth + ring * 2, badgeHeight + ring * 2, (badgeHeight + ring * 2) / 2);
 
     ctx.fillStyle = badgeColor;
-    ctx.beginPath();
-    ctx.arc(badgeCenterX, badgeCenterY, diameter / 2, 0, Math.PI * 2);
-    ctx.fill();
+    drawRoundRect(ctx, badgeX, badgeY, badgeWidth, badgeHeight, badgeHeight / 2);
 
     ctx.fillStyle = 'white';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.font = `700 ${Math.max(16, Math.round(diameter * 0.52))}px Inter, sans-serif`;
-    ctx.fillText((badgeValue || '1').slice(0, 3), badgeCenterX, badgeCenterY + 1);
+    ctx.font = `600 ${Math.max(14, Math.round(badgeHeight * 0.46))}px "gg sans", "Noto Sans", "Helvetica Neue", Arial, sans-serif`;
+    ctx.fillText(text, badgeX + badgeWidth / 2, badgeY + badgeHeight / 2 + 1);
 
     const a = document.createElement('a');
     a.href = canvas.toDataURL('image/png');
@@ -166,7 +174,7 @@ function DiscordNotifTool() {
       <div className="panel">
         <h2>April Fools Notification Badge</h2>
         <p>
-          Researched defaults are set to Discord-like mention red + dark ring. Upload your icon and place a
+          Refined with Discord-like badge proportions and typography. Upload your icon and place a
           realistic unread badge in the bottom-right.
         </p>
 

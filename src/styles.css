@@ -125,7 +125,8 @@ input[type='color'] {
   display: grid;
   place-items: center;
   color: white;
-  font-weight: 800;
+  font-family: "gg sans", "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+  font-weight: 600;
 }
 
 .actions-row {
