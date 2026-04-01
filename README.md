@@ -7,7 +7,8 @@ A modern React + TypeScript + Vite web app for designing Discord icons, Minecraf
 1. **Discord April Fools badge tool**
    - Upload a logo
    - Add a fake bottom-right unread badge (custom number like `1`, `9+`, `99`)
-   - Tune badge color, icon size, and badge offset
+   - Discord-like defaults (mention red + dark ring), badge size/offset controls
+   - Optional Discord app-style rounded-square mask or no mask (keeps full image)
    - Export PNG
 
 2. **Minecraft server icon tool**

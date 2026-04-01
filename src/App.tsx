@@ -1,9 +1,25 @@
 import { ChangeEvent, useMemo, useState } from 'react';
 
 type ToolKey = 'notif' | 'minecraft' | 'palette';
+type IconMask = 'none' | 'discord-app';
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
+}
+
+function roundRectPath(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, radius: number) {
+  const r = clamp(radius, 0, Math.min(w, h) / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
 }
 
 export default function App() {
@@ -49,26 +65,42 @@ function imageFromFile(file: File): Promise<HTMLImageElement> {
 function DiscordNotifTool() {
   const [imgSrc, setImgSrc] = useState<string>('');
   const [badgeValue, setBadgeValue] = useState('1');
-  const [badgeColor, setBadgeColor] = useState('#ed4245');
+  const [badgeColor, setBadgeColor] = useState('#f23f43');
+  const [badgeRingColor, setBadgeRingColor] = useState('#1e1f22');
   const [size, setSize] = useState(256);
-  const [offset, setOffset] = useState(12);
+  const [offset, setOffset] = useState(10);
+  const [badgeScale, setBadgeScale] = useState(30);
+  const [mask, setMask] = useState<IconMask>('none');
 
   const previewStyle = useMemo(() => {
-    const diameter = Math.max(38, Math.round(size * 0.28));
-    const fontSize = Math.max(20, Math.round(size * 0.11));
+    const diameter = Math.max(34, Math.round(size * (badgeScale / 100)));
+    const fontSize = Math.max(16, Math.round(diameter * 0.52));
+    const iconRadius = mask === 'discord-app' ? `${Math.round(size * 0.22)}px` : '0px';
+
     return {
       width: size,
       height: size,
+      borderRadius: iconRadius,
       badge: {
         width: diameter,
         height: diameter,
         fontSize,
         bottom: offset,
         right: offset,
-        background: badgeColor
+        background: badgeColor,
+        borderColor: badgeRingColor
       }
     };
-  }, [badgeColor, badgeValue, offset, size]);
+  }, [badgeColor, badgeRingColor, badgeScale, mask, offset, size]);
+
+  function applyDiscordDefaults() {
+    setBadgeColor('#f23f43');
+    setBadgeRingColor('#1e1f22');
+    setBadgeValue('1');
+    setBadgeScale(30);
+    setOffset(10);
+    setMask('none');
+  }
 
   async function onFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -92,22 +124,24 @@ function DiscordNotifTool() {
 
     ctx.clearRect(0, 0, size, size);
 
-    const iconRadius = size / 2;
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(iconRadius, iconRadius, iconRadius, 0, Math.PI * 2);
-    ctx.closePath();
-    ctx.clip();
-    ctx.drawImage(img, 0, 0, size, size);
-    ctx.restore();
+    if (mask === 'discord-app') {
+      roundRectPath(ctx, 0, 0, size, size, size * 0.22);
+      ctx.save();
+      ctx.clip();
+      ctx.drawImage(img, 0, 0, size, size);
+      ctx.restore();
+    } else {
+      ctx.drawImage(img, 0, 0, size, size);
+    }
 
-    const diameter = Math.max(38, Math.round(size * 0.28));
+    const diameter = Math.max(34, Math.round(size * (badgeScale / 100)));
+    const ring = Math.max(4, Math.round(size * 0.02));
     const badgeCenterX = size - offset - diameter / 2;
     const badgeCenterY = size - offset - diameter / 2;
 
-    ctx.fillStyle = '#111214';
+    ctx.fillStyle = badgeRingColor;
     ctx.beginPath();
-    ctx.arc(badgeCenterX, badgeCenterY, diameter / 2 + 4, 0, Math.PI * 2);
+    ctx.arc(badgeCenterX, badgeCenterY, diameter / 2 + ring, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.fillStyle = badgeColor;
@@ -118,12 +152,12 @@ function DiscordNotifTool() {
     ctx.fillStyle = 'white';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.font = `700 ${Math.max(20, Math.round(size * 0.11))}px Inter, sans-serif`;
-    ctx.fillText(badgeValue, badgeCenterX, badgeCenterY + 1);
+    ctx.font = `700 ${Math.max(16, Math.round(diameter * 0.52))}px Inter, sans-serif`;
+    ctx.fillText((badgeValue || '1').slice(0, 3), badgeCenterX, badgeCenterY + 1);
 
     const a = document.createElement('a');
     a.href = canvas.toDataURL('image/png');
-    a.download = `discord-april-fools-${badgeValue}.png`;
+    a.download = `discord-april-fools-${badgeValue || '1'}.png`;
     a.click();
   }
 
@@ -132,12 +166,21 @@ function DiscordNotifTool() {
       <div className="panel">
         <h2>April Fools Notification Badge</h2>
         <p>
-          Upload a logo, then add the fake unread badge in the bottom-right to prank friends.
+          Researched defaults are set to Discord-like mention red + dark ring. Upload your icon and place a
+          realistic unread badge in the bottom-right.
         </p>
 
         <label>
           Upload logo
           <input type="file" accept="image/*" onChange={onFileChange} />
+        </label>
+
+        <label>
+          Icon mask style
+          <select value={mask} onChange={(e) => setMask(e.target.value as IconMask)}>
+            <option value="none">No mask (keeps full image)</option>
+            <option value="discord-app">Discord app-style rounded square</option>
+          </select>
         </label>
 
         <label>
@@ -151,27 +194,42 @@ function DiscordNotifTool() {
         </label>
 
         <label>
+          Ring color
+          <input type="color" value={badgeRingColor} onChange={(e) => setBadgeRingColor(e.target.value)} />
+        </label>
+
+        <label>
+          Badge size ({badgeScale}%)
+          <input type="range" min={20} max={42} value={badgeScale} onChange={(e) => setBadgeScale(Number(e.target.value))} />
+        </label>
+
+        <label>
           Export size ({size}px)
           <input type="range" min={128} max={1024} step={8} value={size} onChange={(e) => setSize(Number(e.target.value))} />
         </label>
 
         <label>
           Badge offset ({offset}px)
-          <input type="range" min={0} max={48} value={offset} onChange={(e) => setOffset(clamp(Number(e.target.value), 0, 48))} />
+          <input type="range" min={0} max={64} value={offset} onChange={(e) => setOffset(clamp(Number(e.target.value), 0, 64))} />
         </label>
 
-        <button onClick={download} disabled={!imgSrc}>Download PNG</button>
+        <div className="actions-row">
+          <button onClick={applyDiscordDefaults}>Reset Discord-like Defaults</button>
+          <button onClick={download} disabled={!imgSrc}>Download PNG</button>
+        </div>
       </div>
 
       <div className="panel preview-wrap">
         <h3>Preview</h3>
-        <div className="discord-preview" style={{ width: previewStyle.width, height: previewStyle.height }}>
-          {imgSrc ? <img src={imgSrc} alt="Icon preview" /> : <div className="placeholder">Upload an icon</div>}
-          {imgSrc && (
-            <div className="notif" style={previewStyle.badge}>
-              {badgeValue}
-            </div>
-          )}
+        <div className="discord-stage">
+          <div className="discord-preview" style={{ width: previewStyle.width, height: previewStyle.height, borderRadius: previewStyle.borderRadius }}>
+            {imgSrc ? <img src={imgSrc} alt="Icon preview" /> : <div className="placeholder">Upload an icon</div>}
+            {imgSrc && (
+              <div className="notif" style={previewStyle.badge}>
+                {(badgeValue || '1').slice(0, 3)}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </section>
