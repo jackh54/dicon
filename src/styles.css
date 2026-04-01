@@ -1,0 +1,148 @@
+:root {
+  font-family: Inter, system-ui, Arial, sans-serif;
+  line-height: 1.4;
+  color: #f3f4f6;
+  background: #0b1020;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.app-shell {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 2rem 1rem 4rem;
+}
+
+header h1 {
+  margin-bottom: 0.5rem;
+}
+
+header p {
+  margin-top: 0;
+  color: #c6ccdf;
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 1.25rem 0;
+}
+
+.tabs button,
+button {
+  border: 0;
+  border-radius: 12px;
+  padding: 0.7rem 1rem;
+  font-weight: 700;
+  background: #1f2a44;
+  color: #f0f2f9;
+  cursor: pointer;
+}
+
+.tabs button.active {
+  background: #5865f2;
+}
+
+.tool-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  gap: 1rem;
+}
+
+.panel {
+  border: 1px solid #2d3b5d;
+  background: #141c30;
+  padding: 1rem;
+  border-radius: 16px;
+}
+
+.panel h2,
+.panel h3 {
+  margin-top: 0;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin: 0.8rem 0;
+}
+
+input,
+select {
+  border: 1px solid #36466f;
+  border-radius: 10px;
+  padding: 0.6rem;
+  background: #0f1729;
+  color: white;
+}
+
+input[type='color'] {
+  padding: 0;
+  height: 2.3rem;
+}
+
+.preview-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.discord-stage {
+  width: 100%;
+  padding: 1.25rem;
+  border-radius: 14px;
+  background: #1e1f22;
+  display: grid;
+  place-items: center;
+}
+
+.discord-preview {
+  position: relative;
+  overflow: hidden;
+  background: #0d1222;
+  display: grid;
+  place-items: center;
+}
+
+.discord-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.notif {
+  position: absolute;
+  border-radius: 999px;
+  border: 4px solid #1e1f22;
+  display: grid;
+  place-items: center;
+  color: white;
+  font-family: "gg sans", "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+  font-weight: 600;
+}
+
+.actions-row {
+  display: flex;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.placeholder {
+  opacity: 0.7;
+}
+
+.shape-preview {
+  width: min(300px, 60vw);
+  aspect-ratio: 1;
+  margin-top: 0.5rem;
+  border: 1px solid #44527a;
+}
